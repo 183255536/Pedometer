@@ -24,10 +24,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Pedometer.init();
-    Future.delayed(Duration(seconds: 1), () {
-      initPlatformState();
-    });
   }
 
   void onStepCount(StepCount event) {
@@ -60,15 +56,20 @@ class _MyAppState extends State<MyApp> {
   }
 
   void initPlatformState() {
-    _pedestrianStatusStream = Pedometer.pedestrianStatusStream!;
+    _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
     _pedestrianStatusStream
         .listen(onPedestrianStatusChanged)
         .onError(onPedestrianStatusError);
 
-    _stepCountStream = Pedometer.stepCountStream!;
+    _stepCountStream = Pedometer.stepCountStream;
     _stepCountStream.listen(onStepCount).onError(onStepCountError);
 
     if (!mounted) return;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -82,6 +83,16 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Pedometer.init();
+
+                  Future.delayed(Duration(seconds: 1), () {
+                    initPlatformState();
+                  });
+                },
+                child: Text("init Pedestrian"),
+              ),
               Text(
                 'Steps Taken',
                 style: TextStyle(fontSize: 30),
@@ -96,7 +107,7 @@ class _MyAppState extends State<MyApp> {
                 color: Colors.white,
               ),
               Text(
-                'Pedestrian Status',
+                'Pedestrian Status（行人状态）',
                 style: TextStyle(fontSize: 30),
               ),
               Icon(

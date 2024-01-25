@@ -6,8 +6,12 @@ import 'dart:io' show Platform;
 const int _stopped = 0, _walking = 1;
 
 class Pedometer {
-  static EventChannel? _stepDetectionChannel;
-  static EventChannel? _stepCountChannel;
+  static const EventChannel _stepDetectionChannel =
+      const EventChannel('step_detection');
+  static const EventChannel _stepCountChannel =
+      const EventChannel('step_count');
+  static const MethodChannel _stepMethodChannel =
+      const MethodChannel("step_method");
 
   // 初始化状态
   static bool isInit = false;
@@ -17,21 +21,18 @@ class Pedometer {
 
   // 手动初始化防止在隐私协议之前就是用计步传感器
   static void init() {
-    if (isInit) return;
-
-    _stepDetectionChannel ??= const EventChannel('step_detection');
-    _stepCountChannel ??= const EventChannel('step_count');
-    isInit = true;
+    if (Platform.isAndroid) {
+      if (isInit) return;
+      print("初始化传感器列表");
+      _stepMethodChannel.invokeMethod("initPlugin");
+      isInit = true;
+    }
   }
 
   /// Returns one step at a time.
   /// Events come every time a step is detected.
-  static Stream<PedestrianStatus>? get pedestrianStatusStream {
-    if (_stepDetectionChannel == null) {
-      return null;
-    }
-
-    Stream<PedestrianStatus> stream = _stepDetectionChannel!
+  static Stream<PedestrianStatus> get pedestrianStatusStream {
+    Stream<PedestrianStatus> stream = _stepDetectionChannel
         .receiveBroadcastStream()
         .map((event) => PedestrianStatus._(event));
     if (Platform.isAndroid) return _androidStream(stream);
@@ -76,9 +77,9 @@ class Pedometer {
 
   /// Returns the steps taken since last system boot.
   /// Events may come with a delay.
-  static Stream<StepCount>? get stepCountStream {
+  static Stream<StepCount> get stepCountStream {
     return _stepCountChannel
-        ?.receiveBroadcastStream()
+        .receiveBroadcastStream()
         .map((event) => StepCount._(event));
   }
 }
