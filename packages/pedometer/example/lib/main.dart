@@ -24,7 +24,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    Pedometer.init();
+    Future.delayed(Duration(seconds: 1), () {
+      initPlatformState();
+    });
   }
 
   void onStepCount(StepCount event) {
@@ -57,12 +60,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   void initPlatformState() {
-    _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
+    _pedestrianStatusStream = Pedometer.pedestrianStatusStream!;
     _pedestrianStatusStream
         .listen(onPedestrianStatusChanged)
         .onError(onPedestrianStatusError);
 
-    _stepCountStream = Pedometer.stepCountStream;
+    _stepCountStream = Pedometer.stepCountStream!;
     _stepCountStream.listen(onStepCount).onError(onStepCountError);
 
     if (!mounted) return;
